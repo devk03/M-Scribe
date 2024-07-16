@@ -1,9 +1,10 @@
 import os
 from dotenv import load_dotenv
 import time
+import uuid
+import json
 
 load_dotenv()
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -39,27 +40,26 @@ def ensure_index_exists():
     return index_name
 
 
-def embed_chunks(chunks: list, index_name: str):
-    """Embed chunks and store them in Pinecone."""
-    namespace = "ugrl6v"  # Unique key in the UMICH CAEN database
+def embed_chunks(chunks: list, index_name: str, lecture_id: str):
+    """Embed chunks and store them in Pinecone using the lecture_id as namespace."""
     PineconeVectorStore.from_documents(
         documents=chunks,
         index_name=index_name,
         embedding=embeddings,
-        namespace=namespace,
+        namespace=lecture_id,
     )
     time.sleep(1)
-    return namespace
+    return lecture_id
 
 
-def query_pinecone(index_name: str, namespace: str):
-    """Query the Pinecone index and print results."""
+def query_pinecone(index_name: str, lecture_id: str):
+    """Query the Pinecone index for a specific lecture and print results."""
     index = pc.Index(index_name)
     results = []
-    for ids in index.list(namespace=namespace):
+    for ids in index.list(namespace=lecture_id):
         query = index.query(
             id=ids[0],
-            namespace=namespace,
+            namespace=lecture_id,
             top_k=1,
             include_values=True,
             include_metadata=True,
@@ -68,20 +68,72 @@ def query_pinecone(index_name: str, namespace: str):
     return results
 
 
-def process_and_query_text(text: str):
+def process_and_post_text(text: str, lecture_id: str = None):
     """Process text through the entire pipeline and query the results."""
     chunks = chunkify(text)
     indexName = ensure_index_exists()
-    namespace = embed_chunks(chunks, indexName)
-    print("Text processed and embedded successfully.")
+
+    # If no lecture_id is provided, generate a new one
+    if not lecture_id:
+        lecture_id = str(uuid.uuid4())
+
+    namespace = embed_chunks(chunks, indexName, lecture_id)
+    print(f"Text processed and embedded successfully for lecture {lecture_id}.")
 
     results = query_pinecone(indexName, namespace)
-    print("Query results:")
+    print(f"Query results for lecture {lecture_id}:")
     for result in results:
         print(result)
+
+    return lecture_id
+
+
+def get_closest_snippets(query_text: str, namespace: str, top_k: int = 3):
+    """
+    Retrieve the X closest text snippets from the specified Pinecone namespace.
+
+    Args:
+    query_text (str): The input text to find similar snippets for.
+    namespace (str): The namespace (lecture_id) to search in.
+    top_k (int): The number of closest snippets to retrieve. Defaults to 3.
+
+    Returns:
+    list: A list of dictionaries containing the closest snippets and their metadata.
+    """
+    index_name = "skip-ai"
+    index = pc.Index(index_name)
+
+    # Generate embeddings for the query text
+    query_embedding = embeddings.embed_query(query_text)
+
+    # Query Pinecone
+    results = index.query(
+        vector=query_embedding,
+        namespace=namespace,
+        top_k=top_k,
+        include_values=False,
+        include_metadata=True,
+    )
+    return results.to_dict()
 
 
 # Usage
 if __name__ == "__main__":
-    sample_text = "Your text here #####  More text here ##### Even more text"
-    process_and_query_text(sample_text)
+    sample_text1 = "Lecture 1: Introduction to Climate Change ##### The Earth's climate is changing rapidly ##### Human activities are the main driver"
+    sample_text2 = "Lecture 2: Effects of Global Warming ##### Rising sea levels are a major concern ##### Extreme weather events are becoming more frequent"
+
+    # Process and post each lecture separately
+    lecture_id1 = process_and_post_text(sample_text1)
+    lecture_id2 = process_and_post_text(sample_text2)
+
+    # You can now query each lecture separately using their lecture_ids
+    indexName = ensure_index_exists()
+    print("\nQuerying Lecture 1:")
+    results1 = query_pinecone(indexName, lecture_id1)
+    for result in results1:
+        print(result)
+
+    print("\nQuerying Lecture 2:")
+    results2 = query_pinecone(indexName, lecture_id2)
+    for result in results2:
+        print(result)
