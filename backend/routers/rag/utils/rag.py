@@ -52,6 +52,21 @@ def embed_chunks(chunks: list, index_name: str, lecture_id: str):
     return lecture_id
 
 
+def namespace_exists(index_name: str, namespace: str) -> bool:
+    """Check if a namespace exists in the index."""
+    index = pc.Index(index_name)
+    try:
+        result = index.query(
+            vector=[0]*1536,  # Dummy vector for querying
+            namespace=namespace,
+            top_k=1,
+            include_values=False
+        )
+        return len(result.matches) > 0
+    except Exception as e:
+        return False
+
+
 def query_pinecone(index_name: str, lecture_id: str):
     """Query the Pinecone index for a specific lecture and print results."""
     index = pc.Index(index_name)
@@ -71,16 +86,19 @@ def query_pinecone(index_name: str, lecture_id: str):
 def process_and_post_text(text: str, lecture_id: str = None):
     """Process text through the entire pipeline and query the results."""
     chunks = chunkify(text)
-    indexName = ensure_index_exists()
+    index_name = ensure_index_exists()
 
     # If no lecture_id is provided, generate a new one
     if not lecture_id:
         lecture_id = str(uuid.uuid4())
 
-    namespace = embed_chunks(chunks, indexName, lecture_id)
-    print(f"Text processed and embedded successfully for lecture {lecture_id}.")
+    if not namespace_exists(index_name, lecture_id):
+        namespace = embed_chunks(chunks, index_name, lecture_id)
+        print(f"Text processed and embedded successfully for lecture {lecture_id}.")
+    else:
+        print(f"Namespace {lecture_id} already exists. Skipping embedding.")
 
-    results = query_pinecone(indexName, namespace)
+    results = query_pinecone(index_name, lecture_id)
     print(f"Query results for lecture {lecture_id}:")
     for result in results:
         print(result)
@@ -127,13 +145,13 @@ if __name__ == "__main__":
     lecture_id2 = process_and_post_text(sample_text2)
 
     # You can now query each lecture separately using their lecture_ids
-    indexName = ensure_index_exists()
+    index_name = ensure_index_exists()
     print("\nQuerying Lecture 1:")
-    results1 = query_pinecone(indexName, lecture_id1)
+    results1 = query_pinecone(index_name, lecture_id1)
     for result in results1:
         print(result)
 
     print("\nQuerying Lecture 2:")
-    results2 = query_pinecone(indexName, lecture_id2)
+    results2 = query_pinecone(index_name, lecture_id2)
     for result in results2:
         print(result)
