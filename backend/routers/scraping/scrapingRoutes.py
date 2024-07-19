@@ -6,7 +6,7 @@ import requests
 router = APIRouter()
 
 
-def add_delimiters(text, chunk_size=150, delimiter="#####"):
+def add_delimiters(text, chunk_size=300, delimiter="#####"):
     print("Adding delimiters to text")
     delimited_text = ""
     for i, char in enumerate(text):

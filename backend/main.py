@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(scrapingRoutes.router)
 app.include_router(ragRoutes.router)
 
+
 @app.get("/")
 async def root():
     return {"message": "Test"}
