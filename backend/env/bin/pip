@@ -1,4 +1,4 @@
-#!/Users/devk/Developer/SkipAI/backend/env/bin/python3.12
+#!/Users/devk/Developer/M-Scribe/backend/env/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys
