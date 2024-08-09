@@ -1,40 +1,52 @@
-import { useState, useEffect } from "react"
-import "./popup.css"
+import React, { useState, useEffect } from "react";
+import "./popup.css";
+import { postLecture } from "~extension/rag/postLecture";
 
 function IndexPopup() {
-  const [data, setData] = useState("");
-  const [isSynced, setIsSynced] = useState(false);
+  const [data, setData] = useState<string>("");
+  const [isSynced, setIsSynced] = useState<boolean>(false);
+  const [phpSessId, setPhpSessId] = useState<string | null>(null);
+  const [lectureID, setLectureID] = useState<string | null>(null);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const url = tabs[0].url;
       if (url && url.includes('umich.edu')) {
-        const lecturerCode = extractLecturerCode(url);
-        if (lecturerCode) {
-          setIsSynced(true);
-          fetchPHPSESSID(url);
-        }
+        const CAEN_ID = extractLecturerCode(url);
+        fetchPHPSESSID(url).then((PHPSESSID) => {
+          if (CAEN_ID && PHPSESSID) {
+            setIsSynced(true);
+            setPhpSessId(PHPSESSID);
+            setLectureID(CAEN_ID);
+            postLecture(CAEN_ID, PHPSESSID);
+          }
+        });
       }
     });
   }, []);
 
-  const extractLecturerCode = (url) => {
-    const match = url.match(/\/player\/r\/([^\/]+)/)
-    return match ? match[1] : null
+  const extractLecturerCode = (url: string): string | null => {
+    const match = url.match(/\/player\/r\/([^\/]+)/);
+    return match ? match[1] : null;
   };
 
-  const fetchPHPSESSID = (url) => {
-    if (chrome && chrome.cookies && chrome.cookies.get) {
-      chrome.cookies.get({ url: url, name: 'PHPSESSID' }, function (cookie) {
-        if (cookie) {
-          console.log("PHPSESSID fetched:", cookie.value);
-        } else {
-          console.log("PHPSESSID not found");
-        }
-      });
-    } else {
-      console.error('Chrome API not available');
-    }
+  const fetchPHPSESSID = async (url: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      if (chrome && chrome.cookies && chrome.cookies.get) {
+        chrome.cookies.get({ url: url, name: 'PHPSESSID' }, (cookie) => {
+          if (cookie) {
+            console.log("PHPSESSID fetched:", cookie.value);
+            resolve(cookie.value);
+          } else {
+            console.log("PHPSESSID not found");
+            resolve(null);
+          }
+        });
+      } else {
+        console.error('Chrome API not available');
+        resolve(null);
+      }
+    });
   };
 
   return (
@@ -61,7 +73,7 @@ function IndexPopup() {
           type="text"
           id="userInput"
           placeholder="chat here..."
-          onChange={(e) => setData(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData(e.target.value)}
           value={data}
         />
         <button id="sendBtn" className="send-button">Send</button>
