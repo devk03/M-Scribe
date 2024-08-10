@@ -6,8 +6,7 @@ import requests
 router = APIRouter()
 
 
-def add_delimiters(text, chunk_size=300, delimiter="#####"):
-    print("Adding delimiters to text")
+def add_delimiters(text, chunk_size=500, delimiter="#####"):
     delimited_text = ""
     for i, char in enumerate(text):
         delimited_text += char
@@ -23,19 +22,24 @@ async def fetch_lecture(request: Request):
 
     # Get the specific PHPSESSID from the JSON body
     PHPSESSID = body.get("PHPSESSID")
-    CAEN = body.get("CAEN")
-
+    CAEN = body.get("CAEN_ID")
     if not PHPSESSID:
         return {"error": "PHPSESSID not found in request body"}
+    if not CAEN:
+        return {"error": "CAEN_ID not found in request body"}
 
     url = f"https://leccap.engin.umich.edu/leccap/player/api/webvtt/?rk={CAEN}"
     # Use the extracted PHPSESSID to make the request
     response = requests.get(url, cookies={"PHPSESSID": PHPSESSID})
 
     # Parse the content of all timestamps from the response
+    print(">>> Removing timestamps")
     rawTranscript = removeTimestamps(response.content.decode("utf-8"))
+    print(">>> Parsing transcript")
     parsedTranscript = parseTranscript(rawTranscript)
+    print(">>> Adding delimiters")
     delimitedTranscript = add_delimiters(parsedTranscript)
+    print(">>> Posting vectors to Pinecone")
     process_and_post_text(delimitedTranscript, CAEN)
 
     return {"content": delimitedTranscript}

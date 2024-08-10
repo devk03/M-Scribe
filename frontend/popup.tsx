@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./popup.css";
 import { postLecture } from "~extension/rag/postLecture";
+import { chatQuery } from "~extension/chat/chatQuery";
 
-function IndexPopup() {
-  const [data, setData] = useState<string>("");
+export default function IndexPopup() {
+  const [userInput, setUserInput] = useState<string>("");
   const [isSynced, setIsSynced] = useState<boolean>(false);
   const [phpSessId, setPhpSessId] = useState<string | null>(null);
   const [lectureID, setLectureID] = useState<string | null>(null);
+  const [response, setResponse] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -49,6 +52,22 @@ function IndexPopup() {
     });
   };
 
+  const handleSend = async () => {
+    if (!lectureID || !userInput.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const result = await chatQuery(lectureID, userInput);
+      console.log("Response:", result);
+      setResponse(result);
+    } catch (error) {
+      console.error("Error querying:", error);
+      setResponse("An error occurred while processing your request.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="container">
       <header>
@@ -66,6 +85,13 @@ function IndexPopup() {
 
         <button id="summarizeBtn">Summarize Notes 📝</button>
         <button id="timestampsBtn">Timestamps? 🕰️</button>
+
+        {response && (
+          <div className="response-section">
+            <h3>Response:</h3>
+            <p>{response}</p>
+          </div>
+        )}
       </main>
 
       <footer>
@@ -73,13 +99,18 @@ function IndexPopup() {
           type="text"
           id="userInput"
           placeholder="chat here..."
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData(e.target.value)}
-          value={data}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
+          value={userInput}
         />
-        <button id="sendBtn" className="send-button">Send</button>
+        <button
+          id="sendBtn"
+          className="send-button"
+          onClick={handleSend}
+          disabled={isLoading || !isSynced}
+        >
+          {isLoading ? "Sending..." : "Send"}
+        </button>
       </footer>
     </div>
   );
 }
-
-export default IndexPopup;

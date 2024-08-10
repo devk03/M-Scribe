@@ -2,7 +2,6 @@ import re
 
 
 def removeTimestamps(transcript):
-    print(">>> Removing Timestamps\n")
     # Define the regex pattern to match timestamps
     pattern = r"\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\n"
     # Add pattern for the WEBVTT and possible leading/trailing spaces
