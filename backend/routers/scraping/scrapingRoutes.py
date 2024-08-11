@@ -14,6 +14,16 @@ class TranscriptSegment(BaseModel):
     end: str
     text: str
 
+def process_segments(segments):
+    processed_segments = []
+    for segment in segments:
+        transcript_segment = TranscriptSegment(
+            start=segment["start"],
+            end=segment["end"],
+            text=segment["text"],
+        )
+        processed_segments.append(transcript_segment)
+    return processed_segments
 
 @router.post("/lecture")
 async def fetch_lecture(request: Request):
@@ -52,15 +62,8 @@ async def get_timestamps(request: Request):
     # Use the extracted PHPSESSID to make the request
     response = requests.get(url, cookies={"PHPSESSID": PHPSESSID})
 
-    transcript = removeTimestamps(response.content.decode("utf-8"))
-    segments = extractTimestamps(transcript)
+    rawTranscript = removeTimestamps(response.content.decode("utf-8"))
+    segments = extractTimestamps(rawTranscript)
+    process_segments = process_segments(segments)
 
-    processed_segments = []
-    for segment in segments:
-        processed_segments.append({
-            "start": segment['start'],
-            "end": segment['end'],
-            "text": segment['text'],
-        })
-
-    return processed_segments
+    return process_segments
