@@ -1,4 +1,8 @@
 import re
+import openai
+import os
+
+openai.api_key = os.environ.get("AJ KEY")
 
 def add_delimiters(text, chunk_size=300, delimiter="#####"):
     print("Adding delimiters to text")
@@ -16,6 +20,30 @@ def extractTimestamps(transcript):
     pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3})\s-->\s(\d{2}:\d{2}:\d{2}\.\d{3})\n(.+?)\n", re.DOTALL)
     segments = pattern.findall(transcript)
     return [{'start': start, 'end': end, 'text': text.strip()} for start, end, text in segments]
+
+def process_segments(segments):
+    transcript_text = "\n".join([segment['text'] for segment in segments])
+
+    prompt = (
+        "Transform the following lecture transcript into a concise study guide for a student chatbot. "
+        "Include brief section titles, timestamps, key takeaways, and use emojis for visual appeal. "
+        "Incorporate questions or prompts for student engagement. Format the output for easy reading.\n\n"
+        f"{transcript_text}"
+    )
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1024,
+        temperature=0.7,
+    )
+
+    study_guide = response.choices[0].message['content'].strip()
+    return study_guide
+
 
 #-----------------------------------------------------------------------------------------
 

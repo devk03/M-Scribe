@@ -1,7 +1,8 @@
 import requests
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from .utils.parsing import removeTimestamps, parseTranscript, extractTimestamps, add_delimiters
+from .utils.parsing import removeTimestamps, parseTranscript, extractTimestamps, add_delimiters, process_segments
 from ..rag.utils.rag import process_and_post_text
 
 router = APIRouter()
@@ -31,7 +32,7 @@ async def fetch_lecture(request: Request):
     return {"content": delimitedTranscript}
 
 @router.post("/timestamps", response_model=str)
-async def get_timestamps(request: Request):
+async def get_timestamps(request: Request) -> JSONResponse:
     body = await request.json()
     PHPSESSID = body.get("PHPSESSID")
     CAEN = body.get("CAEN")
@@ -43,9 +44,12 @@ async def get_timestamps(request: Request):
     # Use the extracted PHPSESSID to make the request
     response = requests.get(url, cookies={"PHPSESSID": PHPSESSID})
 
-    rawTranscript = response.content.decode("utf-8")
-    
-    segments = extractTimestamps(rawTranscript)
-    print("Timestamps:", segments)
+    rawTranscript = response.content.decode("utf-8") #extracting transcript
+    segments = extractTimestamps(rawTranscript) #extracting timestamps from transcript
 
-    return JSONResponse(content={"timestamps": segments})
+    #just a check to see if timestamps were created
+    #print("Timestamps:", segments)
+
+    process_segments(segments) #using gpt to create study guide
+
+    return JSONResponse({"segments": segments}) #returning timestamps
