@@ -1,5 +1,22 @@
 import re
 
+def add_delimiters(text, chunk_size=300, delimiter="#####"):
+    print("Adding delimiters to text")
+    delimited_text = ""
+    for i, char in enumerate(text):
+        delimited_text += char
+        if (i + 1) % chunk_size == 0 and i < len(text) - 1:
+            delimited_text += delimiter
+    return delimited_text
+
+#-----------------------------------------------------------------------------------------
+
+def extractTimestamps(transcript):
+    pattern = re.compile(r"(\d{2}:\d{2}:\d{2})\s-->\s(\d{2}:\d{2}:\d{2})\n(.+?)\n", re.DOTALL)
+    segments = pattern.findall(transcript)
+    return [{'start': start, 'end': end, 'text': text.strip()} for start, end, text in segments]
+
+#-----------------------------------------------------------------------------------------
 
 def removeTimestamps(transcript):
     print(">>> Removing Timestamps\n")
