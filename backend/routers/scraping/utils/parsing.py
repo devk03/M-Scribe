@@ -31,7 +31,7 @@ def process_segments(segments):
         f"{transcript_text}"
     )
 
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -41,9 +41,8 @@ def process_segments(segments):
         temperature=0.7,
     )
 
-    study_guide = response.choices[0].message['content'].strip()
+    study_guide = response['choices'][0]['message']['content'].strip()
     return study_guide
-
 
 #-----------------------------------------------------------------------------------------
 
