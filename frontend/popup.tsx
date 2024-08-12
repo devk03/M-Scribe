@@ -8,8 +8,9 @@ export default function IndexPopup() {
   const [isSynced, setIsSynced] = useState<boolean>(false);
   const [phpSessId, setPhpSessId] = useState<string | null>(null);
   const [lectureID, setLectureID] = useState<string | null>(null);
-  const [response, setResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Array<{ type: 'user' | 'assistant', content: string }>>([]);
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -56,13 +57,16 @@ export default function IndexPopup() {
     if (!lectureID || !userInput.trim()) return;
 
     setIsLoading(true);
+    setMessages(prev => [...prev, { type: 'user', content: userInput }]);
+    setUserInput("");
+
     try {
       const result = await chatQuery(lectureID, userInput);
       console.log("Response:", result);
-      setResponse(result);
+      setMessages(prev => [...prev, { type: 'assistant', content: result }]);
     } catch (error) {
       console.error("Error querying:", error);
-      setResponse("An error occurred while processing your request.");
+      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]);
     } finally {
       setIsLoading(false);
     }
@@ -75,25 +79,32 @@ export default function IndexPopup() {
       </header>
 
       <main>
-        <div className="question-section">
-          <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
-          <div className="question-text">Have a question?</div>
-          <div className="small-text">
-            {isSynced ? "Lecture is synced." : "Lecture is not synced."}
+        <button className="toggle-button" onClick={() => setIsHidden(!isHidden)}>
+          {isHidden ? '▼ Show' : '▲ Hide'}
+        </button>
+        <div className={`main-content ${isHidden ? 'hidden' : ''}`}>
+          {!isHidden && (
+            <>
+              <div className="question-section">
+                <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
+                <div className="question-text">Have a question?</div>
+                <div className="small-text">
+                  {isSynced ? "Lecture is synced." : "Lecture is not synced."}
+                </div>
+              </div>
+              <button id="summarizeBtn">Summarize Notes 📝</button>
+              <button id="timestampsBtn">Timestamps? 🕰️</button>
+            </>
+          )}
+          <div className="chat-messages">
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.type}`}>
+                {message.content}
+              </div>
+            ))}
           </div>
         </div>
-
-        <button id="summarizeBtn">Summarize Notes 📝</button>
-        <button id="timestampsBtn">Timestamps? 🕰️</button>
-
-        {response && (
-          <div className="response-section">
-            <h3>Response:</h3>
-            <p>{response}</p>
-          </div>
-        )}
       </main>
-
       <footer>
         <input
           type="text"
@@ -101,14 +112,19 @@ export default function IndexPopup() {
           placeholder="chat here..."
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
           value={userInput}
+          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
         />
         <button
           id="sendBtn"
-          className="send-button"
+          className="send-button relative"
           onClick={handleSend}
           disabled={isLoading || !isSynced}
         >
-          {isLoading ? "Sending..." : "Send"}
+          {isLoading ? (
+            "Sending"
+          ) : (
+            "Send"
+          )}
         </button>
       </footer>
     </div>

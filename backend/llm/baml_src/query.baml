@@ -14,7 +14,9 @@ function ExtractResponse(excerpts: string, query: string) -> QueryResponse {
 
     and I want you to do your best to answer the question / comment / whatever.
 
-    The excerpts are ordered by vector similarity to the query, so the ordering might not be chronological.
+    The excerpts are ordered by vector similarity to the query, so the ordering might not be chronological. When answering questions, do not focus on the fact that the professor is talking about explaining a topic, focus on the topic itself.
+    
+    If you can try to be specific about examples used in respect to the lecture.
     
     Excerpts:
     {{ excerpts }}
