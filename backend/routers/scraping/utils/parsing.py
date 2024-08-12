@@ -28,7 +28,7 @@ def process_segments(segments):
 
     prompt = (
         "Transform the following lecture transcript into a concise timestamp guide for a student chatbot. "
-        "Include brief section titles, timestamps, key takeaways, and use emojis for visual appeal. "
+        "Include brief section titles, timestamps, and a one sentence gist for each section, and use emojis for visual appeal. "
         "Format the output for easy reading.\n\n"
         f"{transcript_text}"
     )
