@@ -2,6 +2,8 @@ import re
 import openai
 import os
 
+from openai import OpenAI
+
 openai.api_key = os.environ.get("AJ KEY")
 
 def add_delimiters(text, chunk_size=300, delimiter="#####"):
@@ -25,13 +27,14 @@ def process_segments(segments):
     transcript_text = "\n".join([segment['text'] for segment in segments])
 
     prompt = (
-        "Transform the following lecture transcript into a concise study guide for a student chatbot. "
+        "Transform the following lecture transcript into a concise timestamp guide for a student chatbot. "
         "Include brief section titles, timestamps, key takeaways, and use emojis for visual appeal. "
-        "Incorporate questions or prompts for student engagement. Format the output for easy reading.\n\n"
+        "Format the output for easy reading.\n\n"
         f"{transcript_text}"
     )
 
-    response = openai.chat.completions.create(
+    client = OpenAI(api_key=openai.api_key)
+    output = client.chat.completions.create(
         model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -41,7 +44,7 @@ def process_segments(segments):
         temperature=0.7,
     )
 
-    study_guide = response['choices'][0]['message']['content'].strip()
+    study_guide = output.choices[0].message.content
     return study_guide
 
 #-----------------------------------------------------------------------------------------

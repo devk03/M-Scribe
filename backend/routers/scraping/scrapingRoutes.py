@@ -32,7 +32,7 @@ async def fetch_lecture(request: Request):
     return {"content": delimitedTranscript}
 
 @router.post("/timestamps", response_model=str)
-async def get_timestamps(request: Request) -> JSONResponse:
+async def get_timestamps(request: Request):
     body = await request.json()
     PHPSESSID = body.get("PHPSESSID")
     CAEN = body.get("CAEN")
@@ -50,6 +50,6 @@ async def get_timestamps(request: Request) -> JSONResponse:
     #just a check to see if timestamps were created
     #print("Timestamps:", segments)
 
-    process_segments(segments) #using gpt to create study guide
+    timestampsGuide = process_segments(segments) #using gpt to create study guide
 
-    return JSONResponse({"segments": segments}) #returning timestamps
+    return JSONResponse(content=timestampsGuide)
