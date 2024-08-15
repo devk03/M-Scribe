@@ -1,5 +1,53 @@
 import re
+import openai
+import os
 
+from openai import OpenAI
+
+openai.api_key = os.environ.get("AJ KEY")
+
+def add_delimiters(text, chunk_size=300, delimiter="#####"):
+    print("Adding delimiters to text")
+    delimited_text = ""
+    for i, char in enumerate(text):
+        delimited_text += char
+        if (i + 1) % chunk_size == 0 and i < len(text) - 1:
+            delimited_text += delimiter
+    return delimited_text
+
+#-----------------------------------------------------------------------------------------
+
+def extractTimestamps(transcript):
+    # match timestamps with milliseconds
+    pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3})\s-->\s(\d{2}:\d{2}:\d{2}\.\d{3})\n(.+?)\n", re.DOTALL)
+    segments = pattern.findall(transcript)
+    return [{'start': start, 'end': end, 'text': text.strip()} for start, end, text in segments]
+
+def process_segments(segments):
+    transcript_text = "\n".join([segment['text'] for segment in segments])
+
+    prompt = (
+        "Transform the following lecture transcript into a concise timestamp guide for a student chatbot. "
+        "Include brief section titles, timestamps, and a one sentence gist for each section, and use emojis for visual appeal. "
+        "Format the output for easy reading.\n\n"
+        f"{transcript_text}"
+    )
+
+    client = OpenAI(api_key=openai.api_key)
+    output = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1024,
+        temperature=0.7,
+    )
+
+    study_guide = output.choices[0].message.content
+    return study_guide
+
+#-----------------------------------------------------------------------------------------
 
 def removeTimestamps(transcript):
     # Define the regex pattern to match timestamps
