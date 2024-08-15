@@ -4,7 +4,7 @@ import os
 
 from openai import OpenAI
 
-openai.api_key = os.environ.get("AJ KEY")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 def add_delimiters(text, chunk_size=300, delimiter="#####"):
     print("Adding delimiters to text")
