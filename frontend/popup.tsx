@@ -1,39 +1,74 @@
-import { useState, useEffect } from "react"
-import "./popup.css"
+import React, { useState, useEffect } from "react";
+import "./popup.css";
+import { postLecture } from "~extension/rag/postLecture";
+import { chatQuery } from "~extension/chat/chatQuery";
 
-function IndexPopup() {
-  const [data, setData] = useState("");
-  const [isSynced, setIsSynced] = useState(false);
+export default function IndexPopup() {
+  const [userInput, setUserInput] = useState<string>("");
+  const [isSynced, setIsSynced] = useState<boolean>(false);
+  const [phpSessId, setPhpSessId] = useState<string | null>(null);
+  const [lectureID, setLectureID] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Array<{ type: 'user' | 'assistant', content: string }>>([]);
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const url = tabs[0].url;
       if (url && url.includes('umich.edu')) {
-        const lecturerCode = extractLecturerCode(url);
-        if (lecturerCode) {
-          setIsSynced(true);
-          fetchPHPSESSID(url);
-        }
+        const CAEN_ID = extractLecturerCode(url);
+        fetchPHPSESSID(url).then((PHPSESSID) => {
+          if (CAEN_ID && PHPSESSID) {
+            setIsSynced(true);
+            setPhpSessId(PHPSESSID);
+            setLectureID(CAEN_ID);
+            postLecture(CAEN_ID, PHPSESSID);
+          }
+        });
       }
     });
   }, []);
 
-  const extractLecturerCode = (url) => {
-    const match = url.match(/\/player\/r\/([^\/]+)/)
-    return match ? match[1] : null
+  const extractLecturerCode = (url: string): string | null => {
+    const match = url.match(/\/player\/r\/([^\/]+)/);
+    return match ? match[1] : null;
   };
 
-  const fetchPHPSESSID = (url) => {
-    if (chrome && chrome.cookies && chrome.cookies.get) {
-      chrome.cookies.get({ url: url, name: 'PHPSESSID' }, function (cookie) {
-        if (cookie) {
-          console.log("PHPSESSID fetched:", cookie.value);
-        } else {
-          console.log("PHPSESSID not found");
-        }
-      });
-    } else {
-      console.error('Chrome API not available');
+  const fetchPHPSESSID = async (url: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      if (chrome && chrome.cookies && chrome.cookies.get) {
+        chrome.cookies.get({ url: url, name: 'PHPSESSID' }, (cookie) => {
+          if (cookie) {
+            console.log("PHPSESSID fetched:", cookie.value);
+            resolve(cookie.value);
+          } else {
+            console.log("PHPSESSID not found");
+            resolve(null);
+          }
+        });
+      } else {
+        console.error('Chrome API not available');
+        resolve(null);
+      }
+    });
+  };
+
+  const handleSend = async () => {
+    if (!lectureID || !userInput.trim()) return;
+
+    setIsLoading(true);
+    setMessages(prev => [...prev, { type: 'user', content: userInput }]);
+    setUserInput("");
+
+    try {
+      const result = await chatQuery(lectureID, userInput);
+      console.log("Response:", result);
+      setMessages(prev => [...prev, { type: 'assistant', content: result }]);
+    } catch (error) {
+      console.error("Error querying:", error);
+      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -44,30 +79,54 @@ function IndexPopup() {
       </header>
 
       <main>
-        <div className="question-section">
-          <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
-          <div className="question-text">Have a question?</div>
-          <div className="small-text">
-            {isSynced ? "Lecture is synced." : "Lecture is not synced."}
+        <button className="toggle-button" onClick={() => setIsHidden(!isHidden)}>
+          {isHidden ? '▼ Show' : '▲ Hide'}
+        </button>
+        <div className={`main-content ${isHidden ? 'hidden' : ''}`}>
+          {!isHidden && (
+            <>
+              <div className="question-section">
+                <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
+                <div className="question-text">Have a question?</div>
+                <div className="small-text">
+                  {isSynced ? "Lecture is synced." : "Lecture is not synced."}
+                </div>
+              </div>
+              <button id="summarizeBtn">Summarize Notes 📝</button>
+              <button id="timestampsBtn">Timestamps? 🕰️</button>
+            </>
+          )}
+          <div className="chat-messages">
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.type}`}>
+                {message.content}
+              </div>
+            ))}
           </div>
         </div>
-
-        <button id="summarizeBtn">Summarize Notes 📝</button>
-        <button id="timestampsBtn">Timestamps? 🕰️</button>
       </main>
-
       <footer>
         <input
           type="text"
           id="userInput"
           placeholder="chat here..."
-          onChange={(e) => setData(e.target.value)}
-          value={data}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
+          value={userInput}
+          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
         />
-        <button id="sendBtn" className="send-button">Send</button>
+        <button
+          id="sendBtn"
+          className="send-button relative"
+          onClick={handleSend}
+          disabled={isLoading || !isSynced}
+        >
+          {isLoading ? (
+            "Sending"
+          ) : (
+            "Send"
+          )}
+        </button>
       </footer>
     </div>
   );
 }
-
-export default IndexPopup;

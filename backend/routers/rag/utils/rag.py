@@ -57,10 +57,10 @@ def namespace_exists(index_name: str, namespace: str) -> bool:
     index = pc.Index(index_name)
     try:
         result = index.query(
-            vector=[0]*1536,  # Dummy vector for querying
+            vector=[0] * 1536,  # Dummy vector for querying
             namespace=namespace,
             top_k=1,
-            include_values=False
+            include_values=False,
         )
         return len(result.matches) > 0
     except Exception as e:
@@ -99,14 +99,11 @@ def process_and_post_text(text: str, lecture_id: str = None):
         print(f"Namespace {lecture_id} already exists. Skipping embedding.")
 
     results = query_pinecone(index_name, lecture_id)
-    print(f"Query results for lecture {lecture_id}:")
-    for result in results:
-        print(result)
 
     return lecture_id
 
 
-def get_closest_snippets(query_text: str, namespace: str, top_k: int = 3):
+def get_closest_snippets(query_text: str, namespace: str, top_k: int = 5):
     """
     Retrieve the X closest text snippets from the specified Pinecone namespace.
 
@@ -133,6 +130,23 @@ def get_closest_snippets(query_text: str, namespace: str, top_k: int = 3):
         include_metadata=True,
     )
     return results.to_dict()
+
+
+def create_excerpts(excerpts) -> str | None:
+    """Combines multiple excerpts into a single string."""
+    print(">>> ENTERING create_excerpts")
+    matches = excerpts.get("matches")
+    print(">>> matches:", matches)
+
+    if not matches:
+        return None
+
+    result = ""
+    for i, match in enumerate(matches, 1):
+        text = match.get("metadata", {}).get("text", "No text available")
+        result += f"excerpt {i}: {text}\n\n"
+
+    return result.strip()
 
 
 # Usage
