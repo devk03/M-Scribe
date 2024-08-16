@@ -23,3 +23,8 @@ class QueryResponse(BaseModel):
     
     
     response: str
+
+class TimestampsResponse(BaseModel):
+    
+    
+    timestamps: str

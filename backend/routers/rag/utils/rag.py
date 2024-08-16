@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 import time
 import uuid
@@ -148,6 +149,13 @@ def create_excerpts(excerpts) -> str | None:
 
     return result.strip()
 
+def extractTimestamps(transcript):
+    # match timestamps with milliseconds
+    pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3})\s-->\s(\d{2}:\d{2}:\d{2}\.\d{3})\n(.+?)\n", re.DOTALL)
+    segments = pattern.findall(transcript)
+    formatted_string = "\n".join(f"{start} --> {end}\n{text}" for start, end, text in segments)
+
+    return formatted_string
 
 # Usage
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./popup.css";
 import { postLecture } from "~extension/rag/postLecture";
 import { chatQuery } from "~extension/chat/chatQuery";
+import { timestampsQuery } from "~extension/timestamps/timestampsQuery";
 
 export default function IndexPopup() {
   const [userInput, setUserInput] = useState<string>("");
@@ -72,6 +73,23 @@ export default function IndexPopup() {
     }
   };
 
+  const handleTimestamps = async () => {
+    if (!lectureID || !phpSessId) return;
+
+    setIsLoading(true);
+    try {
+      const timestampsData = await timestampsQuery(lectureID, phpSessId);
+      setMessages(prev => [...prev, { type: 'assistant', content: timestampsData }]);
+    }
+    catch (error) {
+      console.error("Error fetching timestamps:", error);
+      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]); 
+    }
+    finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="container">
       <header>
@@ -93,7 +111,7 @@ export default function IndexPopup() {
                 </div>
               </div>
               <button id="summarizeBtn">Summarize Notes 📝</button>
-              <button id="timestampsBtn">Timestamps? 🕰️</button>
+              <button id="timestampsBtn" onClick={handleTimestamps}>Timestamps? 🕰️</button>
             </>
           )}
           <div className="chat-messages">

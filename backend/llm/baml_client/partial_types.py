@@ -32,3 +32,8 @@ class QueryResponse(BaseModel):
     
     
     response: Optional[str] = None
+
+class TimestampsResponse(BaseModel):
+    
+    
+    timestamps: Optional[str] = None

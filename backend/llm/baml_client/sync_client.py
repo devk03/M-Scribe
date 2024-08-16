@@ -57,6 +57,30 @@ class BamlSyncClient:
       return self.__stream_client
 
     
+    def CreateTimestampGuide(
+        self,
+        transcript: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.TimestampsResponse:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "CreateTimestampGuide",
+        {
+          "transcript": transcript,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("CreateTimestampGuideReturnType", inner=(types.TimestampsResponse, ...))
+      return coerce(mdl, raw.parsed())
+    
     def ExtractResponse(
         self,
         excerpts: str,query: str,
@@ -92,6 +116,39 @@ class BamlStreamClient:
       self.__runtime = runtime
       self.__ctx_manager = ctx_manager
 
+    
+    def CreateTimestampGuide(
+        self,
+        transcript: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.TimestampsResponse, types.TimestampsResponse]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "CreateTimestampGuide",
+        {
+          "transcript": transcript,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      mdl = create_model("CreateTimestampGuideReturnType", inner=(types.TimestampsResponse, ...))
+      partial_mdl = create_model("CreateTimestampGuidePartialReturnType", inner=(partial_types.TimestampsResponse, ...))
+
+      return baml_py.BamlSyncStream[partial_types.TimestampsResponse, types.TimestampsResponse](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+      )
     
     def ExtractResponse(
         self,
