@@ -10,6 +10,7 @@ export default function IndexPopup() {
   const [phpSessId, setPhpSessId] = useState<string | null>(null);
   const [lectureID, setLectureID] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [timestampGuide, setTimestampGuide] = useState<Array<{ time: string, title: string, summary: string, emoji: string }>>([]);
   const [messages, setMessages] = useState<Array<{ type: 'user' | 'assistant', content: string }>>([]);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -79,14 +80,15 @@ export default function IndexPopup() {
     setIsLoading(true);
     try {
       const timestampsData = await timestampsQuery(lectureID, phpSessId);
-      setMessages(prev => [...prev, { type: 'assistant', content: timestampsData }]);
+      setTimestampGuide(timestampsData.timestamps);
     }
     catch (error) {
       console.error("Error fetching timestamps:", error);
-      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]); 
+      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]);
     }
     finally {
       setIsLoading(false);
+      
     }
   };
 
@@ -121,6 +123,16 @@ export default function IndexPopup() {
               </div>
             ))}
           </div>
+          {timestampGuide.length > 0 && (
+            <div className="timestamps-guide">
+              <h3>Timestamps Guide</h3>
+                {timestampGuide.map((ts, index) => (
+                  <li key={index}>
+                    <strong>{ts.time} {ts.emoji}</strong> - <strong>{ts.title}</strong>: {ts.summary}
+                  </li>
+                ))}
+            </div>
+          )}
         </div>
       </main>
       <footer>

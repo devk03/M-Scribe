@@ -141,7 +141,7 @@ button:disabled {
   border: none;
   color: #00274C;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 16px;
   padding: 5px;
   margin-bottom: 10px;
   width: auto;
@@ -171,4 +171,32 @@ input[type="text"] {
   width: 25%;
   margin: 0;
   padding: 10px;
+}
+
+.timestamps-guide {
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timestamps-guide h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 5px 0;
+  text-align: center;
+}
+
+.timestamps-guide li {
+  width: auto;
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 15px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
 }

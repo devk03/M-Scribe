@@ -1,6 +1,7 @@
 //timestampsQuery.ts - Purpose: Query the FastAPI backend for lecture timestamps
+import type { TimestampsResponse } from "./type";
 
-export const timestampsQuery = async (lectureID: string, PHPSESSID: string) => {
+export const timestampsQuery = async (lectureID: string, PHPSESSID: string) : Promise<TimestampsResponse> => {
     const settings = {
         method: 'POST',
         body: JSON.stringify({
@@ -20,7 +21,7 @@ export const timestampsQuery = async (lectureID: string, PHPSESSID: string) => {
         const data = await fetchResponse.json();
         console.log("Response from FastAPI Backend:", data);
 
-        return data.timestamps;
+        return data as TimestampsResponse;
 
     } catch (error) {
         console.error("Error querying FastAPI Backend:", error);

@@ -24,7 +24,15 @@ class QueryResponse(BaseModel):
     
     response: str
 
+class Timestamp(BaseModel):
+    
+    
+    time: str
+    title: str
+    summary: str
+    emoji: str
+
 class TimestampsResponse(BaseModel):
     
     
-    timestamps: str
+    timestamps: List["Timestamp"]
