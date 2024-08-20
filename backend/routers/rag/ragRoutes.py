@@ -22,7 +22,7 @@ async def read_users(request: Request):
     return bamlResponse
 
 @router.post("/summary")
-async def fetch_lecture(request: Request):
+async def make_summary(request: Request):
    
     body = await request.json()
 
