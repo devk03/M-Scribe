@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import time
 import uuid
 import json
-
+from openai import OpenAI
 load_dotenv()
 from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings
@@ -169,3 +169,18 @@ if __name__ == "__main__":
     results2 = query_pinecone(index_name, lecture_id2)
     for result in results2:
         print(result)
+
+def create_summary(text):
+    prompt = f"Given the following lecure summary, can you output a list of important notes as well as review questions I should be able to answer :\n{text}"
+    
+    #prob need to adjust this key use
+    client = OpenAI(api_key=os.getenv("QAYF_KEY"))
+    output = client.chat.completions.create(
+        model="gpt-4.0-turbo",
+        messages=[
+            {"role": "system", "content": "You are an assistant that is helping college students review lecture content for their class."},
+            {"role": "user", "content": prompt}
+        ],  
+        temperature=0.3  #want lower temperature for more deterministic output
+    )
+    return output
