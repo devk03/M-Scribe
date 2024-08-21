@@ -3,12 +3,19 @@ import "./popup.css";
 import { postLecture } from "~extension/rag/postLecture";
 import { chatQuery } from "~extension/chat/chatQuery";
 
+import { summaryQuery } from "~extension/summary/summaryQuery";
+
 export default function IndexPopup() {
   const [userInput, setUserInput] = useState<string>("");
   const [isSynced, setIsSynced] = useState<boolean>(false);
   const [phpSessId, setPhpSessId] = useState<string | null>(null);
   const [lectureID, setLectureID] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  const [timestampGuide, setTimestampGuide] = useState<Array<{ time: string, title: string, summary: string, emoji: string }>>([]);
+  
+  const [summaryData, setSummaryData] = useState<{ summary: string; notes: string[]; reviewQuestions: string[]; } | null>(null);
+  
   const [messages, setMessages] = useState<Array<{ type: 'user' | 'assistant', content: string }>>([]);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -71,62 +78,109 @@ export default function IndexPopup() {
       setIsLoading(false);
     }
   };
+  
+  const handleSummary = async () => {
+	  if (!lectureID) return;
+	  
+	  setIsLoading(true);
+	  try {
+		  const summaryResult = await summaryQuery(lectureID);
+		  console.log("Summary Result:", summaryResult);
+		  setSummaryData(summaryResult);
+	  } catch (error) {
+      console.error("Error fetching summary:", error);
+    }
+  };
 
   return (
-    <div className="container">
-      <header>
-        <h2>💬 Chat with M-Scribe</h2>
-      </header>
+  <div className="container">
+    <header>
+      <h2>💬 Chat with M-Scribe</h2>
+    </header>
 
-      <main>
-        <button className="toggle-button" onClick={() => setIsHidden(!isHidden)}>
-          {isHidden ? '▼ Show' : '▲ Hide'}
-        </button>
-        <div className={`main-content ${isHidden ? 'hidden' : ''}`}>
-          {!isHidden && (
-            <>
-              <div className="question-section">
-                <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
-                <div className="question-text">Have a question?</div>
-                <div className="small-text">
-                  {isSynced ? "Lecture is synced." : "Lecture is not synced."}
-                </div>
+    <main>
+      <button className="toggle-button" onClick={() => setIsHidden(!isHidden)}>
+        {isHidden ? '▼ Show' : '▲ Hide'}
+      </button>
+      
+      <div className={`main-content ${isHidden ? 'hidden' : ''}`}>
+        {!isHidden && (
+          <>
+            <div className="question-section">
+              <img src="https://em-content.zobj.net/source/telegram/386/thinking-face_1f914.webp" alt="Thinking Emoji" />
+              <div className="question-text">Have a question?</div>
+              <div className="small-text">
+                {isSynced ? "Lecture is synced." : "Lecture is not synced."}
               </div>
-              <button id="summarizeBtn">Summarize Notes 📝</button>
-              <button id="timestampsBtn">Timestamps? 🕰️</button>
-            </>
-          )}
-          <div className="chat-messages">
-            {messages.map((message, index) => (
-              <div key={index} className={`message ${message.type}`}>
-                {message.content}
-              </div>
+            </div>
+            <button id="summarizeBtn" onClick={handleSummary}>Summarize Notes 📝</button>
+          </>
+        )}
+        
+        <div className="chat-messages">
+          {messages.map((message, index) => (
+            <div key={index} className={`message ${message.type}`}>
+              {message.content}
+            </div>
+          ))}
+        </div>
+        
+        {timestampGuide.length > 0 && (
+          <div className="timestamps-guide">
+            <h3>Timestamps Guide</h3>
+            {timestampGuide.map((ts, index) => (
+              <li key={index}>
+                <strong>{ts.time} {ts.emoji}</strong> - <strong>{ts.title}</strong>: {ts.summary}
+              </li>
             ))}
           </div>
-        </div>
-      </main>
-      <footer>
-        <input
-          type="text"
-          id="userInput"
-          placeholder="chat here..."
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
-          value={userInput}
-          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-        />
-        <button
-          id="sendBtn"
-          className="send-button relative"
-          onClick={handleSend}
-          disabled={isLoading || !isSynced}
-        >
-          {isLoading ? (
-            "Sending"
-          ) : (
-            "Send"
-          )}
-        </button>
-      </footer>
-    </div>
-  );
+        )}
+        
+        {summaryData && (
+          <div className="summary-output">
+            <h3>Summary</h3>
+            <p>{summaryData.summary}</p>
+
+            <h3>Important Notes</h3>
+            <ul>
+              {summaryData.notes.map((note, index) => (
+                <li key={index}>{note}</li>
+              ))}
+            </ul>
+
+            <h3>Review Questions</h3>
+            <ul>
+              {summaryData.reviewQuestions.map((question, index) => (
+                <li key={index}>{question}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </main>
+    
+    <footer>
+      <input
+        type="text"
+        id="userInput"
+        placeholder="chat here..."
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
+        value={userInput}
+        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+      />
+      <button
+        id="sendBtn"
+        className="send-button relative"
+        onClick={handleSend}
+        disabled={isLoading || !isSynced}
+      >
+        {isLoading ? (
+          "Sending"
+        ) : (
+          "Send"
+        )}
+      </button>
+    </footer>
+  </div>
+);
 }

@@ -1,9 +1,8 @@
-export const summaryQuery = async (lectureID: string, queryText: string) => {
+export const summaryQuery = async (lectureID: string) => {
     const settings = {
         method: 'POST',
         body: JSON.stringify({
             CAEN_ID: lectureID,
-            queryText: queryText,
         }),
         headers: {
             Accept: 'application/json',
@@ -18,7 +17,7 @@ export const summaryQuery = async (lectureID: string, queryText: string) => {
         const data = await fetchResponse.json();
         console.log("Response from FastAPI Backend:", data);
 
-        return data.response; // I think summary is just the response string
+        return data 
     }
     catch (error) {
         console.error("Error querying FastAPI Backend:", error);
