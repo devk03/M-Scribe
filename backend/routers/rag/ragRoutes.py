@@ -40,6 +40,6 @@ async def make_summary(request: Request):
     parsedTranscript = parseTranscript(rawTranscript)
 
     #using GPT API to create the summary
-    secondSummary = create_summary(parsedTranscript)
+    summary = create_summary(parsedTranscript)
 
-    return secondSummary
+    return summary

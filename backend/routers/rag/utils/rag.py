@@ -10,6 +10,8 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from pinecone import ServerlessSpec
 from pinecone.grpc import PineconeGRPC as Pinecone
+from llm.baml_client.sync_client import b as BAML_CLIENT
+from llm.baml_client.types import StructureSummary
 
 # Initialize Pinecone and OpenAI embeddings
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
@@ -171,16 +173,16 @@ if __name__ == "__main__":
         print(result)
 
 def create_summary(text):
-    prompt = f"Given the following lecure summary, can you output a list of important notes as well as review questions I should be able to answer :\n{text}"
+
+    baml_response = BAML_CLIENT.StructureSummary(text)
     
-    #prob need to adjust this key use
-    client = OpenAI(api_key=os.getenv("QAYF_KEY"))
-    output = client.chat.completions.create(
-        model="gpt-4.0-turbo",
-        messages=[
-            {"role": "system", "content": "You are an assistant that is helping college students review lecture content for their class."},
-            {"role": "user", "content": prompt}
-        ],  
-        temperature=0.3  #want lower temperature for more deterministic output
-    )
-    return output
+    # Extract the summary, notes, and review questions from the BAML query response
+    summary = baml_response.summary
+    notes = baml_response.notes
+    review_questions = baml_response.reviewQuestions
+
+    return {
+        "Concise Summary": summary,
+        "Important Notes": notes,
+        "Review Questions": review_questions
+    }
