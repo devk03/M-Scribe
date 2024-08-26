@@ -32,3 +32,10 @@ class QueryResponse(BaseModel):
     
     
     response: Optional[str] = None
+
+class SummaryResponse(BaseModel):
+    
+    
+    summary: Optional[str] = None
+    notes: List[Optional[str]]
+    reviewQuestions: List[Optional[str]]

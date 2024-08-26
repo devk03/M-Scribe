@@ -10,6 +10,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from pinecone import ServerlessSpec
 from pinecone.grpc import PineconeGRPC as Pinecone
+from llm.baml_client.sync_client import b as BAML_CLIENT
 
 # Initialize Pinecone and OpenAI embeddings
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))

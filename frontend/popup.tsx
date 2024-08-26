@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./popup.css";
 import { postLecture } from "~extension/rag/postLecture";
 import { chatQuery } from "~extension/chat/chatQuery";
+import { summaryQuery } from "~extension/summary/summaryQuery";
 
 export default function IndexPopup() {
   const [userInput, setUserInput] = useState<string>("");
@@ -11,6 +12,9 @@ export default function IndexPopup() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [messages, setMessages] = useState<Array<{ type: 'user' | 'assistant', content: string }>>([]);
   const [isHidden, setIsHidden] = useState(false);
+  const [summary, setSummary] = useState("");
+  const [notes, setNotes] = useState([]);
+  const [reviewQuestions, setReviewQuestions] = useState([]);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -28,6 +32,8 @@ export default function IndexPopup() {
       }
     });
   }, []);
+
+
 
   const extractLecturerCode = (url: string): string | null => {
     const match = url.match(/\/player\/r\/([^\/]+)/);
@@ -72,6 +78,23 @@ export default function IndexPopup() {
     }
   };
 
+  const handleSummary = async () => {
+	  if (!lectureID || !phpSessId) return;
+	  
+	  setIsLoading(true);
+	  try {
+      console.log("lectureID:", lectureID, "phpSessId:", phpSessId);
+		  const summaryResult = await summaryQuery(lectureID, phpSessId);
+		  //console.log("Summary Result:", summaryResult);
+		  setSummary(summaryResult.summary.summary)
+      setNotes(summaryResult.summary.notes)
+      setReviewQuestions(summaryResult.summary.questions)
+	  } catch (error) {
+      console.error("Error fetching summary:", error);
+      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]);
+    }
+  };
+
   return (
     <div className="container">
       <header>
@@ -92,7 +115,7 @@ export default function IndexPopup() {
                   {isSynced ? "Lecture is synced." : "Lecture is not synced."}
                 </div>
               </div>
-              <button id="summarizeBtn">Summarize Notes 📝</button>
+              <button id="summarizeBtn" onClick={handleSummary}>Summarize Notes 📝</button>
               <button id="timestampsBtn">Timestamps? 🕰️</button>
             </>
           )}
@@ -103,6 +126,29 @@ export default function IndexPopup() {
               </div>
             ))}
           </div>
+
+          <div className="summary-output">
+            <h3>Summary</h3>
+            <p>{summary}</p>
+
+            <h3>Important Notes</h3>
+            <ul>
+            {notes ? notes.map((note, index) => (
+              <li key={index}>{note}</li>
+            )) : <li>No notes available</li>}
+            </ul>
+
+            <h3>Review Questions</h3>
+            <ul>
+            {reviewQuestions ? reviewQuestions.map((question, index) => (
+            <li key={index}>{question}</li>
+            )) : <li>No questions available</li>}
+            </ul>
+</div>
+
+    
+
+
         </div>
       </main>
       <footer>

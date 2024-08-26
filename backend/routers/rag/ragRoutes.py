@@ -1,10 +1,36 @@
 from fastapi import APIRouter, Request
 from .utils.rag import get_closest_snippets, create_excerpts
+from routers.scraping.utils.parsing import removeTimestamps, parseTranscript
 from llm.baml_client.sync_client import b as BAML_CLIENT
 from llm.baml_client.types import QueryResponse
+import requests
 
 router = APIRouter()
 
+@router.post("/summary")
+async def make_summary(request: Request):
+
+    body = await request.json()
+
+    CAEN = body.get("CAEN_ID")
+    PHPSESSID = body.get("PHPSESSID")
+    #for some reason the body from the chat query is being sent, which is why PHP ID is never found 
+    if not CAEN or not PHPSESSID:
+        return {"error": "lectureID not found in request body"}
+    
+
+    url = f"https://leccap.engin.umich.edu/leccap/player/api/webvtt/?rk={CAEN}"
+
+    # Use the extracted PHPSESSID to make the request
+    response = requests.get(url, cookies={"PHPSESSID": PHPSESSID})
+    rawTranscript = removeTimestamps(response.content.decode("utf-8"))
+    parsedTranscript = parseTranscript(rawTranscript)
+    
+
+    #using GPT API to create the summary
+    summary = BAML_CLIENT.StructureSummary(parsedTranscript)
+
+    return summary
 
 @router.post("/query")
 async def read_users(request: Request):

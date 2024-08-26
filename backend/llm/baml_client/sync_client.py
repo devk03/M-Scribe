@@ -81,6 +81,30 @@ class BamlSyncClient:
       mdl = create_model("ExtractResponseReturnType", inner=(types.QueryResponse, ...))
       return coerce(mdl, raw.parsed())
     
+    def StructureSummary(
+        self,
+        text: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.SummaryResponse:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "StructureSummary",
+        {
+          "text": text,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("StructureSummaryReturnType", inner=(types.SummaryResponse, ...))
+      return coerce(mdl, raw.parsed())
+    
 
 
 
@@ -121,6 +145,39 @@ class BamlStreamClient:
       partial_mdl = create_model("ExtractResponsePartialReturnType", inner=(partial_types.QueryResponse, ...))
 
       return baml_py.BamlSyncStream[partial_types.QueryResponse, types.QueryResponse](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+      )
+    
+    def StructureSummary(
+        self,
+        text: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.SummaryResponse, types.SummaryResponse]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "StructureSummary",
+        {
+          "text": text,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      mdl = create_model("StructureSummaryReturnType", inner=(types.SummaryResponse, ...))
+      partial_mdl = create_model("StructureSummaryPartialReturnType", inner=(partial_types.SummaryResponse, ...))
+
+      return baml_py.BamlSyncStream[partial_types.SummaryResponse, types.SummaryResponse](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),

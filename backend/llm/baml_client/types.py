@@ -23,3 +23,10 @@ class QueryResponse(BaseModel):
     
     
     response: str
+
+class SummaryResponse(BaseModel):
+    
+    
+    summary: str
+    notes: List[str]
+    reviewQuestions: List[str]

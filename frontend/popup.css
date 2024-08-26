@@ -172,3 +172,31 @@ input[type="text"] {
   margin: 0;
   padding: 10px;
 }
+
+.summary-output {
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-output h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 5px 0;
+  text-align: center;
+}
+
+.summary-output li {
+  width: auto;
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 15px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
