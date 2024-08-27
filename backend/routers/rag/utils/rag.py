@@ -94,7 +94,7 @@ def process_and_post_text(text: str, lecture_id: str = None):
 
     if not namespace_exists(index_name, lecture_id):
         namespace = embed_chunks(chunks, index_name, lecture_id)
-        print(f"Text processed and embedded successfully for lecture {lecture_id}.")
+        print(f">>> Text processed and embedded successfully for lecture {lecture_id}.")
     else:
         print(f"Namespace {lecture_id} already exists. Skipping embedding.")
 

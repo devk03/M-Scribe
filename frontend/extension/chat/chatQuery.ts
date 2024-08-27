@@ -1,10 +1,12 @@
 // chatQuery.ts - Purpose: Query the FastAPI backend for lecture responses
-export const chatQuery = async (lectureID: string, queryText: string) => {
+export const chatQuery = async (lectureID: string, queryText: string, chatContext: any) => {
+    console.log("Querying FastAPI Backend with:", lectureID, queryText, chatContext);
     const settings = {
         method: 'POST',
         body: JSON.stringify({
             CAEN_ID: lectureID,
             queryText: queryText,
+            chatContext: chatContext
         }),
         headers: {
             Accept: 'application/json',

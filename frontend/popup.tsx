@@ -57,16 +57,25 @@ export default function IndexPopup() {
     if (!lectureID || !userInput.trim()) return;
 
     setIsLoading(true);
-    setMessages(prev => [...prev, { type: 'user', content: userInput }]);
-    setUserInput("");
 
     try {
-      const result = await chatQuery(lectureID, userInput);
+      const updatedMessages = await new Promise<typeof messages>(resolve => {
+        setMessages(prev => {
+          const newMessages = [...prev, { type: 'user' as const, content: userInput }];
+          resolve(newMessages);
+          return newMessages;
+        });
+      });
+
+      setUserInput("");
+
+      const result = await chatQuery(lectureID, userInput, updatedMessages);
       console.log("Response:", result);
-      setMessages(prev => [...prev, { type: 'assistant', content: result }]);
+
+      setMessages(prev => [...prev, { type: 'assistant' as const, content: result }]);
     } catch (error) {
       console.error("Error querying:", error);
-      setMessages(prev => [...prev, { type: 'assistant', content: "An error occurred while processing your request." }]);
+      setMessages(prev => [...prev, { type: 'assistant' as const, content: "An error occurred while processing your request." }]);
     } finally {
       setIsLoading(false);
     }
