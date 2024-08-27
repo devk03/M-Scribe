@@ -97,7 +97,7 @@ export default function IndexPopup() {
     }
     finally {
       setIsLoading(false);
-      
+
     }
   };
 
@@ -121,9 +121,18 @@ export default function IndexPopup() {
                   {isSynced ? "Lecture is synced." : "Lecture is not synced."}
                 </div>
               </div>
-              <button id="summarizeBtn">Summarize Notes 📝</button>
               <button id="timestampsBtn" onClick={handleTimestamps}>Timestamps? 🕰️</button>
             </>
+          )}
+          {timestampGuide.length > 0 && (
+            <div className="timestamps-guide">
+              <h3>Timestamps Guide</h3>
+              {timestampGuide.map((ts, index) => (
+                <li key={index}>
+                  <strong>{ts.time} {ts.emoji}</strong> - <strong>{ts.title}</strong>: {ts.summary}
+                </li>
+              ))}
+            </div>
           )}
           <div className="chat-messages">
             {messages.map((message, index) => (
@@ -132,16 +141,7 @@ export default function IndexPopup() {
               </div>
             ))}
           </div>
-          {timestampGuide.length > 0 && (
-            <div className="timestamps-guide">
-              <h3>Timestamps Guide</h3>
-                {timestampGuide.map((ts, index) => (
-                  <li key={index}>
-                    <strong>{ts.time} {ts.emoji}</strong> - <strong>{ts.title}</strong>: {ts.summary}
-                  </li>
-                ))}
-            </div>
-          )}
+
         </div>
       </main>
       <footer>
