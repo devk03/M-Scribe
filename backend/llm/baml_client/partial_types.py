@@ -32,3 +32,16 @@ class QueryResponse(BaseModel):
     
     
     response: Optional[str] = None
+
+class Timestamp(BaseModel):
+    
+    
+    time: Optional[str] = None
+    title: Optional[str] = None
+    summary: Optional[str] = None
+    emoji: Optional[str] = None
+
+class TimestampsResponse(BaseModel):
+    
+    
+    timestamps: List["Timestamp"]

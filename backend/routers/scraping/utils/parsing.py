@@ -17,12 +17,6 @@ def add_delimiters(text, chunk_size=300, delimiter="#####"):
 
 #-----------------------------------------------------------------------------------------
 
-def extractTimestamps(transcript):
-    # match timestamps with milliseconds
-    pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3})\s-->\s(\d{2}:\d{2}:\d{2}\.\d{3})\n(.+?)\n", re.DOTALL)
-    segments = pattern.findall(transcript)
-    return [{'start': start, 'end': end, 'text': text.strip()} for start, end, text in segments]
-
 def process_segments(segments):
     transcript_text = "\n".join([segment['text'] for segment in segments])
 
