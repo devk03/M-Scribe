@@ -200,3 +200,18 @@ input[type="text"] {
   line-height: 1.5;
   text-align: center;
 }
+.login-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.login-section h2 {
+  margin-bottom: 20px;
+}
+
+.login-button {
+  width: 80%;
+}
